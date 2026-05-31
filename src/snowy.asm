@@ -5,40 +5,40 @@
 ;
 ; GRAPHICS MODE: 320x192 pixels, 16 colors  (max practical for CPU-accessible VRAM)
 ;
-; MODE SELECTION — how 320x16col is achieved (from Sock Master's GIME reference):
-;   VRES HRES=111 → 160 bytes per row
-;   VRES CRES=10  → 16 colors, 2 pixels per byte (one nibble each)
-;   160 bytes/row × 2 px/byte = 320 pixels wide ✓
-;   VMODE BP=1, H50=0, LPR=000 → graphics, 60 Hz, 1 scan line per row
+; MODE SELECTION -- how 320x16col is achieved (from Sock Master's GIME reference):
+;   VRES HRES=111 -> 160 bytes per row
+;   VRES CRES=10  -> 16 colors, 2 pixels per byte (one nibble each)
+;   160 bytes/row x 2 px/byte = 320 pixels wide OK
+;   VMODE BP=1, H50=0, LPR=000 -> graphics, 60 Hz, 1 scan line per row
 ;
-;   VRES register ($FF99) value for 320×192×16col:
+;   VRES register ($FF99) value for 320x192x16col:
 ;     bit7   = 0 (unused)
-;     bits6-5 = LPF = 00 → 192 scan lines
-;     bits4-2 = HRES = 111 → 160 bytes/row
-;     bits1-0 = CRES = 10 → 16 colors
-;     → 0b0_00_111_10 = $1E
+;     bits6-5 = LPF = 00 -> 192 scan lines
+;     bits4-2 = HRES = 111 -> 160 bytes/row
+;     bits1-0 = CRES = 10 -> 16 colors
+;     -> 0b0_00_111_10 = $1E
 ;
 ;   VMODE register ($FF98) value:
 ;     bit7 BP   = 1 (graphics mode)
 ;     bit6      = 0 (unused)
-;     bit5 BPI  = 0 (composite phase — irrelevant for RGB monitors)
+;     bit5 BPI  = 0 (composite phase -- irrelevant for RGB monitors)
 ;     bit4 MOCH = 0 (not monochrome)
 ;     bit3 H50  = 0 (60 Hz NTSC)
 ;     bits2-0 LPR = 000 (1 scan line per row)
-;     → 0b10000000 = $80
+;     -> 0b10000000 = $80
 ;
 ; 225-LINE VARIANT:
-;   Change VRES LPF bits to 11 → $7E instead of $1E.
-;   BUT: 160 bytes/row × 225 rows = 36,000 bytes.  This requires VID_BASE at
+;   Change VRES LPF bits to 11 -> $7E instead of $1E.
+;   BUT: 160 bytes/row x 225 rows = 36,000 bytes.  This requires VID_BASE at
 ;   $6F80 or lower to stay within the 64K address space.  See notes at bottom.
 ;
-; SPRITE FORMAT: 4bpp packed, 2 pixels per byte (same as 160×192×16col mode,
+; SPRITE FORMAT: 4bpp packed, 2 pixels per byte (same as 160x192x16col mode,
 ;   just displayed at double horizontal scale).  High nibble = left pixel,
 ;   low nibble = right pixel.  Pixel nibble 0 = transparent.
 ;
-; VIDEO RAM: 160 bytes/row × 192 rows = 30,720 bytes ($7800).
-;   VID_BASE = $8000.  End address = $F7FF.  Fits in one 64K CPU map ✓
-;   (Starting at $A000 would end at $117FF — overflow.  $8000 is mandatory.)
+; VIDEO RAM: 160 bytes/row x 192 rows = 30,720 bytes ($7800).
+;   VID_BASE = $8000.  End address = $F7FF.  Fits in one 64K CPU map OK
+;   (Starting at $A000 would end at $117FF -- overflow.  $8000 is mandatory.)
 ;
 ; MEMORY MAP:
 ;   $0000-$00FF  Direct Page (fast game variables, DP register = $00)
@@ -46,7 +46,7 @@
 ;   $2000-$5FFF  Program code + sprite frame data
 ;   $6000-$7FFF  Sprite tables, background save buffers  
 ;   $7FFE        Stack base (grows down)
-;   $8000-$F7FF  Video RAM (30,720 bytes — 320×192×16 color)
+;   $8000-$F7FF  Video RAM (30,720 bytes -- 320x192x16 color)
 ;   $FE00-$FEFF  Secondary interrupt vectors (MC3 keeps this constant)
 ;   $FF00-$FFFF  GIME / PIA hardware registers
 ;
@@ -102,8 +102,8 @@ MMU_TASK0   EQU  $FFA0   ; Task 0 slots $FFA0-$FFA7  (slot N maps $N*$2000 CPU s
 MMU_TASK1   EQU  $FFA8   ; Task 1 slots $FFA8-$FFAF
 
 ; --- CPU speed ---
-CPU_SLOW    EQU  $FFD8   ; Any write → 0.89 MHz
-CPU_FAST    EQU  $FFD9   ; Any write → 1.79 MHz
+CPU_SLOW    EQU  $FFD8   ; Any write -> 0.89 MHz
+CPU_FAST    EQU  $FFD9   ; Any write -> 1.79 MHz
 
 ; --- PIA 0 ($FF00-$FF03): Keyboard ---
 PIA0DA      EQU  $FF00   ; Data A: write row select, read column (active-low)
@@ -119,7 +119,7 @@ PIA1CRB     EQU  $FF23
 
 ; --- Secondary interrupt vector page ($FE00-$FEFF) ---
 ; Active when INIT0 bit3 MC3 = 1  (constant $FExx RAM)
-; Chain: CPU reads ROM vector → $FExx jump → $01xx jump → user handler
+; Chain: CPU reads ROM vector -> $FExx jump -> $01xx jump -> user handler
 VEC2_FIRQ   EQU  $FEF4   ; FIRQ secondary vector: contains JMP instruction to $010F
 VEC2_IRQ    EQU  $FEF7   ; IRQ  secondary vector: contains JMP instruction to $010C
 VEC2_RESET  EQU  $FEFD   ; RESET secondary vector
@@ -140,18 +140,18 @@ SCRNBPR     EQU  160     ; Bytes per screen row: 320px / 2px-per-byte = 160
 
 ; GIME video offset = physical start address / 8.
 ; Physical start depends on MMU setup.  For 128K CoCo3 mapping video pages
-; to CPU $8000 (MMU slots 4-7 → physical pages $38-$3B = $70000-$77FFF):
-;   VOFF = $70000 / 8 = $E000  →  VOFF_H=$E0, VOFF_L=$00
+; to CPU $8000 (MMU slots 4-7 -> physical pages $38-$3B = $70000-$77FFF):
+;   VOFF = $70000 / 8 = $E000  ->  VOFF_H=$E0, VOFF_L=$00
 ; Adjust to match your MMU configuration.
 VOFF_H_VAL  EQU  $E0
 VOFF_L_VAL  EQU  $00
 
-; GIME register values for 320×192×16 colors:
+; GIME register values for 320x192x16 colors:
 VMODE_VAL   EQU  $80     ; BP=1 (graphics), H50=0 (60Hz), LPR=000 (1 line/row)
 VRES_VAL    EQU  $1E     ; LPF=00(192 lines) HRES=111(160B/row) CRES=10(16col)
-;VRES_225   EQU  $7E     ; LPF=11(225 lines) — use with VID_BASE=$6F80 or lower
+;VRES_225   EQU  $7E     ; LPF=11(225 lines) -- use with VID_BASE=$6F80 or lower
 
-; --- Sprite dimensions (16×24 pixels, 4bpp) ---
+; --- Sprite dimensions (16x24 pixels, 4bpp) ---
 SPR_W       EQU  16      ; Width in pixels
 SPR_H       EQU  24      ; Height in pixels
 SPR_BYTES   EQU  SPR_W/2 ; Bytes per sprite row (2 pixels/byte) = 8
@@ -298,7 +298,7 @@ ZERO_DP
         STA  CPU_FAST
 
         JSR  MMU_INIT         ; Map video pages to $8000-$F7FF
-        JSR  GIME_INIT        ; Configure 320×192×16-color graphics
+        JSR  GIME_INIT        ; Configure 320x192x16-color graphics
         JSR  PALETTE_INIT     ; Load 16-color palette
         JSR  VSYNC_INIT       ; Install FIRQ handler via $FEF4 vector chain
         JSR  SCREEN_CLEAR     ; Fill video with sky color
@@ -320,7 +320,7 @@ MAIN_LOOP
 ML_NOHIB
 
         JSR  READ_INPUT        ; Keyboard scan + edge detection
-        JSR  UPDATE_PLAYER     ; Input → physics → position
+        JSR  UPDATE_PLAYER     ; Input -> physics -> position
         JSR  UPDATE_ENEMIES    ; Patrol AI
         JSR  CHECK_COLLISIONS  ; AABB player-vs-enemy
 
@@ -332,18 +332,18 @@ ML_NOHIB
 
 ; =============================================================================
 ; MMU_INIT - Map 4 consecutive physical RAM pages to CPU $8000-$FFFF
-;            so that 30,720 bytes of video RAM (320×192×16col) fits in one
+;            so that 30,720 bytes of video RAM (320x192x16col) fits in one
 ;            contiguous CPU address window.
 ;
 ; 128K CoCo 3 physical layout:
-;   Valid RAM pages $38-$3B  →  physical $70000-$77FFF
+;   Valid RAM pages $38-$3B  ->  physical $70000-$77FFF
 ;   Pages $3C-$3F are internal ROM when ROM mode is active.
 ;
 ; We map:
-;   CPU $8000-$9FFF (MMU slot 4) → physical page $38 ($70000-$71FFF)
-;   CPU $A000-$BFFF (MMU slot 5) → physical page $39 ($72000-$73FFF)
-;   CPU $C000-$DFFF (MMU slot 6) → physical page $3A ($74000-$75FFF)
-;   CPU $E000-$FFFF (MMU slot 7) → physical page $3B ($76000-$77FFF)
+;   CPU $8000-$9FFF (MMU slot 4) -> physical page $38 ($70000-$71FFF)
+;   CPU $A000-$BFFF (MMU slot 5) -> physical page $39 ($72000-$73FFF)
+;   CPU $C000-$DFFF (MMU slot 6) -> physical page $3A ($74000-$75FFF)
+;   CPU $E000-$FFFF (MMU slot 7) -> physical page $3B ($76000-$77FFF)
 ;
 ; The GIME video offset must match:  VOFF = $70000 / 8 = $E000
 ; (Set in GIME_INIT via VOFF_H_VAL = $E0, VOFF_L_VAL = $00)
@@ -360,7 +360,7 @@ MMU_INIT
         STA  GIME_INIT0
 
         ; Write video pages to slots 4-7 ($FFA4-$FFA7)
-        LDA  #$38          ; Physical page $38 → CPU $8000
+        LDA  #$38          ; Physical page $38 -> CPU $8000
         STA  MMU_TASK0+4
         LDA  #$39
         STA  MMU_TASK0+5
@@ -373,10 +373,10 @@ MMU_INIT
         ; BASIC's default mapping or your cartridge layout applies here.
         ; For a standalone cartridge starting from reset, set these to your
         ; code pages.  Example for code in first 32KB of physical RAM ($00000):
-        ;   LDA #$00 : STA MMU_TASK0+0  ; $0000 → phys page $00
-        ;   LDA #$01 : STA MMU_TASK0+1  ; $2000 → phys page $01
-        ;   LDA #$02 : STA MMU_TASK0+2  ; $4000 → phys page $02
-        ;   LDA #$03 : STA MMU_TASK0+3  ; $6000 → phys page $03
+        ;   LDA #$00 : STA MMU_TASK0+0  ; $0000 -> phys page $00
+        ;   LDA #$01 : STA MMU_TASK0+1  ; $2000 -> phys page $01
+        ;   LDA #$02 : STA MMU_TASK0+2  ; $4000 -> phys page $02
+        ;   LDA #$03 : STA MMU_TASK0+3  ; $6000 -> phys page $03
         ; For LOADM from BASIC: BASIC has already set up slots 0-3 correctly
         ; for the load addresses.  Leave them as-is.
 
@@ -384,15 +384,15 @@ MMU_INIT
 
 
 ; =============================================================================
-; GIME_INIT - Configure 320×192×16-color graphics mode
+; GIME_INIT - Configure 320x192x16-color graphics mode
 ; =============================================================================
 GIME_INIT
         ; INIT0:
-        ;   bit7 COCO  = 0  ← CRITICAL: must be 0 for CoCo3 graphics
+        ;   bit7 COCO  = 0  <- CRITICAL: must be 0 for CoCo3 graphics
         ;   bit6 MMUEN = 1  (MMU already enabled by MMU_INIT, keep it)
         ;   bit5 IEN   = 0  (no IRQ from GIME for now)
-        ;   bit4 FEN   = 1  (FIRQ from GIME enabled — VSync uses FIRQ)
-        ;   bit3 MC3   = 1  (keep $FExx RAM constant — interrupt vector chain)
+        ;   bit4 FEN   = 1  (FIRQ from GIME enabled -- VSync uses FIRQ)
+        ;   bit3 MC3   = 1  (keep $FExx RAM constant -- interrupt vector chain)
         ;   bit2 MC2   = 0
         ;   bits1-0    = 10 (32K internal ROM map)
         ;   = 0b0_1_0_1_1_0_10 = $5A
@@ -403,7 +403,7 @@ GIME_INIT
         CLR  GIME_INIT1
 
         ; Video RAM physical start address (must match MMU slot 4 physical page):
-        ;   VOFF = physical_start / 8  →  $70000 / 8 = $E000
+        ;   VOFF = physical_start / 8  ->  $70000 / 8 = $E000
         LDA  #VOFF_H_VAL   ; $E0
         STA  GIME_VOFF_H
         LDA  #VOFF_L_VAL   ; $00
@@ -456,31 +456,31 @@ PAL_LOOP
 
 PALETTE_DATA
 ;         Encoding       r  g  b   Role
-        FCB  $00    ;  0: 0,0,0 — Transparent / solid black
-        FCB  $0A    ;  1: 0,1,2 — Mid-sky blue   (background sky)
-        FCB  $1D    ;  2: 1,2,3 — Bright sky blue (sky highlight)
-        FCB  $3F    ;  3: 3,3,3 — Snow white      (Snowy body, snow)
-        FCB  $38    ;  4: 2,2,2 — Light grey      (shadow on Snowy)
-        FCB  $07    ;  5: 1,1,1 — Dark grey       (outlines, eyes)
-        FCB  $00    ;  6: 0,0,0 — Black           (solid black, pupils)
-        FCB  $12    ;  7: 0,3,0 — Bright green    (grass)
-        FCB  $10    ;  8: 0,2,0 — Dark green      (grass shadow)
-        FCB  $22    ;  9: 2,1,0 — Brown           (platform wood/earth)
-        FCB  $35    ; 10: 3,2,1 — Light brown     (platform highlight)
-        FCB  $24    ; 11: 3,0,0 — Red             (enemies, danger)
-        FCB  $36    ; 12: 3,3,0 — Yellow          (collectible stars)
-        FCB  $34    ; 13: 3,2,0 — Orange          (collectible coins)
-        FCB  $1B    ; 14: 0,3,3 — Cyan            (ice platforms, water)
-        FCB  $2D    ; 15: 3,0,2 — Magenta         (bonus items)
+        FCB  $00    ;  0: 0,0,0 -- Transparent / solid black
+        FCB  $0A    ;  1: 0,1,2 -- Mid-sky blue   (background sky)
+        FCB  $1D    ;  2: 1,2,3 -- Bright sky blue (sky highlight)
+        FCB  $3F    ;  3: 3,3,3 -- Snow white      (Snowy body, snow)
+        FCB  $38    ;  4: 2,2,2 -- Light grey      (shadow on Snowy)
+        FCB  $07    ;  5: 1,1,1 -- Dark grey       (outlines, eyes)
+        FCB  $00    ;  6: 0,0,0 -- Black           (solid black, pupils)
+        FCB  $12    ;  7: 0,3,0 -- Bright green    (grass)
+        FCB  $10    ;  8: 0,2,0 -- Dark green      (grass shadow)
+        FCB  $22    ;  9: 2,1,0 -- Brown           (platform wood/earth)
+        FCB  $35    ; 10: 3,2,1 -- Light brown     (platform highlight)
+        FCB  $24    ; 11: 3,0,0 -- Red             (enemies, danger)
+        FCB  $36    ; 12: 3,3,0 -- Yellow          (collectible stars)
+        FCB  $34    ; 13: 3,2,0 -- Orange          (collectible coins)
+        FCB  $1B    ; 14: 0,3,3 -- Cyan            (ice platforms, water)
+        FCB  $2D    ; 15: 3,0,2 -- Magenta         (bonus items)
 
 
 ; =============================================================================
 ; VSYNC_INIT - Install FIRQ handler via the CoCo 3 secondary vector chain
 ;
 ; The chain (from Sock Master's reference):
-;   CPU reads ROM vector $FFF6 → contains $FEF4
-;   $FEF4 (constant RAM, MC3=1) → JMP to $010F
-;   $010F → our handler (we install JMP here OR patch $FEF4 directly)
+;   CPU reads ROM vector $FFF6 -> contains $FEF4
+;   $FEF4 (constant RAM, MC3=1) -> JMP to $010F
+;   $010F -> our handler (we install JMP here OR patch $FEF4 directly)
 ;
 ; We patch $FEF4 directly with a JMP extended instruction to our handler.
 ; This takes over the FIRQ chain completely, bypassing $010F.
@@ -490,9 +490,9 @@ PALETTE_DATA
 VSYNC_INIT
         ; Patch $FEF4: write  JMP $7E  +  address of VSYNC_HANDLER
         LDA  #$7E              ; 6809 JMP extended opcode
-        STA  VEC2_FIRQ         ; $FEF4 ← $7E
+        STA  VEC2_FIRQ         ; $FEF4 <- $7E
         LDD  #VSYNC_HANDLER
-        STD  VEC2_FIRQ+1       ; $FEF5-$FEF6 ← address
+        STD  VEC2_FIRQ+1       ; $FEF5-$FEF6 <- address
 
         ; Enable GIME FIRQ on vertical border (FIRQEN bit3 VBORD = 1)
         LDA  #$08
@@ -500,7 +500,7 @@ VSYNC_INIT
 
         RTS
 
-; FIRQ handler — called ~60 times per second on vertical border
+; FIRQ handler -- called ~60 times per second on vertical border
 VSYNC_HANDLER
         ; Reading FIRQEN acknowledges and clears the interrupt source
         LDA  GIME_FIRQEN
@@ -638,7 +638,7 @@ GAME_INIT
 ; =============================================================================
 UPDATE_PLAYER
         TST  <PLR_ALIVE
-        BEQ  UP_EXIT
+        LBEQ UP_EXIT
 
         ; --- Horizontal: LEFT ---
         LDA  <INP_CUR
@@ -655,22 +655,19 @@ UP_SL   STA  <PLR_X
         STA  <PLR_DIR
 UP_NO_L
 
-        ; --- Horizontal: RIGHT (max pixel = SCRNW-SPR_W = 304) ---
-        ; 304 > 255, so values 256-304 need the extension byte PLR_X_EXT.
-        ; For simplicity here we cap at 255.  For full 320px range, promote
-        ; PLR_X/PLR_X_EXT to a 16-bit word and use ADDD / CMPD.
+        ; --- Horizontal: RIGHT ---
+        ; SCRNW-SPR_W=304=$130 overflows a byte immediate.
+        ; PLR_X is a byte (0-255); cap at $F0 (240) so a 16px
+        ; sprite stays fully on-screen within the byte range.
         LDA  <INP_CUR
         BITA #JOY_RIGHT
         BEQ  UP_NO_R
         LDA  <PLR_X
         ADDA #WALK_SPD
-        BCS  UP_CR          ; Carry = overflow past 255
-        CMPA #(SCRNW-SPR_W) ; 304: only reachable if using 16-bit X
+        BCS  UP_CR          ; Carry = overflowed 255, clamp
+        CMPA #$F0           ; Cap at 240
         BLS  UP_SR
-UP_CR   LDA  #(SCRNW-SPR_W) & $FF  ; Low byte of 304 = $30 = 48? No: 304=$130
-        ; NOTE: 304 = $130 > $FF.  This cap needs 16-bit comparison.
-        ; Practical workaround: limit to 240 here, extend to 304 via PLR_X_EXT.
-        LDA  #240
+UP_CR   LDA  #$F0           ; Clamp to 240
 UP_SR   STA  <PLR_X
         CLR  <PLR_DIR
 UP_NO_R
@@ -779,7 +776,7 @@ UE_LOOP
         LDA  ,Y            ; enemy X
         ADDA ENM_VX-ENM_X,Y
         BCS  UE_BNC        ; Carry = below 0
-        CMPA #(SCRNW-SPR_W) & $FF
+        CMPA #$F0           ; right cap = 240 (304=$130 overflows byte)
         BLS  UE_OK
 UE_BNC  LDA  ENM_VX-ENM_X,Y
         NEGA               ; Reverse direction
@@ -873,7 +870,7 @@ SERS_L
         BEQ  SERS_N
         JSR  BG_RESTORE
         LDA  SPR_REC_FLG,X
-        ANDA #~SPR_DIRTY
+        ANDA #$FF^SPR_DIRTY  ; clear SPR_DIRTY bit (~SPR_DIRTY -- LWASM complement form)
         STA  SPR_REC_FLG,X
 SERS_N  LEAX SPR_REC_SZ,X
         DECB
@@ -1001,14 +998,14 @@ BGR_BYTE
 ; Input:  X = sprite record pointer
 ;
 ; Each byte in sprite data = 2 pixels:
-;   High nibble ($F0 mask) = left  pixel  — nibble 0 = transparent
-;   Low  nibble ($0F mask) = right pixel  — nibble 0 = transparent
+;   High nibble ($F0 mask) = left  pixel  -- nibble 0 = transparent
+;   Low  nibble ($0F mask) = right pixel  -- nibble 0 = transparent
 ;
 ; Read-modify-write keeps adjacent pixels in the same screen byte intact.
 ;
-; Performance: 8 bytes/row × 24 rows = 192 iterations.
-;   ~30 cycles/byte × 192 = 5,760 cycles.  At 1.79 MHz ≈ 3.2 ms/sprite.
-;   6 sprites ≈ 19 ms — tight but within 16.7 ms if kept to 5 sprites, or use
+; Performance: 8 bytes/row x 24 rows = 192 iterations.
+;   ~30 cycles/byte x 192 = 5,760 cycles.  At 1.79 MHz ? 3.2 ms/sprite.
+;   6 sprites ? 19 ms -- tight but within 16.7 ms if kept to 5 sprites, or use
 ;   double-buffering (see notes) to allow background erasure off-screen.
 ; =============================================================================
 SPR_BLIT
@@ -1064,16 +1061,17 @@ SB_R_TR
 
 ; =============================================================================
 ; SCREEN_CLEAR - Fill entire video buffer with sky color
-; Color 1 ($1A... no, byte $11) = both pixels = palette index 1 (mid-sky blue)
+; Byte $11 = both nibbles = palette color index 1 (mid-sky blue).
+; Total bytes = SCRNBPR * SCRNH = 160 * 192 = 30,720 = $7800.
+; BUG FIX: LDD #$7800 overwrote A (the fill byte) before the write loop.
+; Use LDY as the counter instead; LEAY affects Z flag on 6809.
 ; =============================================================================
 SCREEN_CLEAR
         LDX  #VID_BASE
-        LDA  #$11          ; Both nibbles = color index 1 (mid-sky blue)
-        LDY  #(SCRNBPR*SCRNH/2)  ; $7800/2... actually loop over all bytes
-        ; Total bytes = 160 * 192 = 30,720 = $7800
-        LDD  #$7800
+        LDA  #$11          ; fill byte: both pixels = palette color 1
+        LDY  #$7800        ; loop counter = 30,720 bytes
 SC_L    STA  ,X+
-        SUBD #1
+        LEAY -1,Y          ; LEAY sets Z flag on 6809
         BNE  SC_L
         RTS
 
@@ -1103,21 +1101,25 @@ DBGS_L
 ; GIME color indices used:
 ;   $99 = both pixels color 9 (brown)
 ;   $AA = both pixels color 10 (light brown/highlight)
-;   $77 = both pixels color 7 (bright green — ground grass top)
+;   $77 = both pixels color 7 (bright green -- ground grass top)
 NUM_PLATFORMS EQU  5
 PLATFORM_TABLE
-;            X1B  X2B    Y      Fill
-        FCB    0, 159, GROUND_Y,   $99  ; Ground floor     (full 320px width)
-        FCB    5,  68, PLAT1_Y,    $99  ; Tier-1 left
-        FCB   92, 155, PLAT1_Y,    $99  ; Tier-1 right
-        FCB   25, 110, PLAT2_Y,    $99  ; Tier-2 mid
-        FCB   55, 120, PLAT3_Y,    $99  ; Tier-3 top
+; Each record: X1_byte, X2_byte, Y_pixel, FillByte  (4 bytes)
+; Y values are literals -- LWASM cannot reliably evaluate EQU symbols
+; inside FCB operand lists in all configurations.
+; GROUND_Y=160  PLAT1_Y=120  PLAT2_Y=80  PLAT3_Y=40
+;            X1B  X2B    Y    Fill
+        FCB  $00,$9F,$A0,$99  ; Ground floor (full 320px width): X1=0  X2=159 Y=160
+        FCB  $05,$44,$78,$99  ; Tier-1 left:  X1=5  X2=68  Y=120
+        FCB  $5C,$9B,$78,$99  ; Tier-1 right: X1=92 X2=155 Y=120
+        FCB  $19,$6E,$50,$99  ; Tier-2 mid:   X1=25 X2=110 Y=80
+        FCB  $37,$78,$28,$99  ; Tier-3 top:   X1=55 X2=120 Y=40
 
 
 ; =============================================================================
 ; DRAW_HBAR - Draw a solid horizontal bar 4 rows tall
-; Input: X → {X1_byte, X2_byte, Y, FillByte}  (no registers trashed by caller
-;             since PSHS B is used — X itself is saved by PSHS in loop above)
+; Input: X -> {X1_byte, X2_byte, Y, FillByte}  (no registers trashed by caller
+;             since PSHS B is used -- X itself is saved by PSHS in loop above)
 ; =============================================================================
 DRAW_HBAR
         PSHS A,B,X,Y
@@ -1165,7 +1167,7 @@ DHB_FILL
 ; Each byte = two pixels: high nibble = left pixel, low nibble = right pixel.
 ; Nibble 0 = transparent.
 ;
-; Sprite size: 16 pixels wide × 24 pixels tall = 8 bytes/row × 24 rows = 192 bytes/frame.
+; Sprite size: 16 pixels wide x 24 pixels tall = 8 bytes/row x 24 rows = 192 bytes/frame.
 ;
 ; Palette mapping used in sprite data:
 ;   0 = transparent
@@ -1189,11 +1191,11 @@ DHB_FILL
 ; -----------------------------------------------------------------------
 SPR_SNOWY_IDLE
         FCB  $00,$33,$33,$00,$00,$33,$33,$00  ; ..WWWW....WWWW..    head top
-        FCB  $03,$33,$33,$30,$03,$33,$33,$00  ; .WWWWWW..WWWWW..    head upper (ear hints start — brown inner ears at positions 1 and 6) 
+        FCB  $03,$33,$33,$30,$03,$33,$33,$00  ; .WWWWWW..WWWWW..    head upper (ear hints start   brown inner ears at positions 1 and 6) 
         FCB  $33,$33,$33,$30,$33,$33,$33,$00  ; WWWWWWW.WWWWWW..     slightly asymmetric ear hints
         FCB  $33,$33,$36,$60,$63,$33,$33,$00  ; WWWWW__._WWWWW..     dark eyes at positions 5-6     
         FCB  $33,$33,$36,$60,$63,$33,$33,$00  ; WWWWW__._WWWWW..     dark eye highlights at positions 5-6
-        FCB  $03,$33,$99,$93,$33,$33,$30,$00  ; .WWWBBBWWWWWW...     snout starts — brown
+        FCB  $03,$33,$99,$93,$33,$33,$30,$00  ; .WWWBBBWWWWWW...     snout starts   brown
         FCB  $03,$39,$96,$93,$99,$33,$30,$00  ; .WB_BWBWBBWWW...     nose centre = dark 6
         FCB  $03,$33,$33,$33,$33,$33,$30,$00  ; .WWWWWWWWWWWW...     chin
         FCB  $00,$33,$33,$33,$33,$33,$00,$00  ; ..WWWWWWWWWW....     neck
@@ -1214,12 +1216,14 @@ SPR_SNOWY_IDLE
         FCB  $03,$35,$00,$00,$00,$53,$33,$00  ; .WWS......SWWW..
 
 ; -----------------------------------------------------------------------
-; Snowy Walk Frame 1  —  left leg forward, right leg back
+; Snowy Walk Frame 1  --  left leg forward, right leg back
 ; -----------------------------------------------------------------------
 SPR_SNOWY_WALK1
 ; Rows 0-15: identical to Idle (head + body)
         FCB  $00,$33,$33,$00,$00,$33,$33,$00  ; ..WWWW....WWWW.. 
         FCB  $03,$33,$33,$30,$03,$33,$33,$00  ; .WWWWWW..WWWWW..
+        FCB  $33,$33,$33,$30,$33,$33,$33,$00  ; WWWWWWW.WWWWWW..
+        FCB  $33,$33,$36,$60,$63,$33,$33,$00  ; WWWWW__._WWWWW..
         FCB  $33,$33,$36,$60,$63,$33,$33,$00  ; WWWWW__._WWWWW..
         FCB  $03,$33,$99,$93,$33,$33,$30,$00  ; .WWWBBBWWWWWW...
         FCB  $03,$39,$96,$93,$99,$33,$30,$00  ; .WB_BWBWBBWWW... 
@@ -1242,7 +1246,7 @@ SPR_SNOWY_WALK1
         FCB  $35,$30,$00,$00,$00,$03,$53,$00  ; WSW........WSW..   (dark toe outline)
 
 ; -----------------------------------------------------------------------
-; Snowy Walk Frame 2  —  right leg forward, left leg back (mirror of WF1)
+; Snowy Walk Frame 2  --  right leg forward, left leg back (mirror of WF1)
 ; -----------------------------------------------------------------------
 SPR_SNOWY_WALK2
 ; Rows 0-15: same as Walk1 head+body
@@ -1272,7 +1276,7 @@ SPR_SNOWY_WALK2
         FCB  $00,$35,$30,$00,$00,$03,$53,$00  ; ..WSW......SW...
 
 ; -----------------------------------------------------------------------
-; Snowy Jump  —  arms raised, knees tucked
+; Snowy Jump  --  arms raised, knees tucked
 ; -----------------------------------------------------------------------
 SPR_SNOWY_JUMP
 ; Rows 0-8: head
@@ -1306,7 +1310,7 @@ SPR_SNOWY_JUMP
 ; Round red creature with white eyes (color 2) and dark pupils (color 6)
 ; -----------------------------------------------------------------------
 SPR_ENEMY0_WALK1
-; Head — round red blob
+; Head -- round red blob
         FCB  $00,$BB,$BB,$00,$00,$BB,$BB,$00  ;  ..RRRR....RRRR..
         FCB  $0B,$BB,$BB,$B0,$0B,$BB,$BB,$00  ;  .RRRRRR..RRRRR..
         FCB  $BB,$BB,$BB,$BB,$BB,$BB,$BB,$00  ;  RRRRRRRRRRRRRR..
@@ -1333,7 +1337,7 @@ SPR_ENEMY0_WALK1
         FCB  $BB,$B6,$00,$00,$6B,$BB,$00,$00  ; RRR_...._RRR....
 
 ; -----------------------------------------------------------------------
-; Enemy 0 Walk Frame 2  —  legs mirrored
+; Enemy 0 Walk Frame 2  --  legs mirrored
 ; -----------------------------------------------------------------------
 SPR_ENEMY0_WALK2
 ; Head identical to frame 1
@@ -1376,37 +1380,37 @@ SPR_ENEMY0_WALK2
 
 
 ; =============================================================================
-; DEVELOPER NOTES — 320×192 × 16 colors on CoCo 3
+; DEVELOPER NOTES -- 320x192 x 16 colors on CoCo 3
 ; =============================================================================
 ;
 ; CORRECT GIME REGISTER VALUES (verified from Sock Master's reference):
 ;
 ;   VMODE ($FF98) = $80
-;     bit7 BP   = 1  → graphics mode
-;     bit5 BPI  = 0  → (composite phase invert, irrelevant for RGB monitors)
-;     bit3 H50  = 0  → 60 Hz (set to 1 for 50 Hz / PAL)
-;     bits2-0 LPR = 000 → one scan line per row
+;     bit7 BP   = 1  -> graphics mode
+;     bit5 BPI  = 0  -> (composite phase invert, irrelevant for RGB monitors)
+;     bit3 H50  = 0  -> 60 Hz (set to 1 for 50 Hz / PAL)
+;     bits2-0 LPR = 000 -> one scan line per row
 ;
 ;   VRES ($FF99) = $1E  (for 192 lines)
-;     bits6-5 LPF = 00  → 192 scan lines
-;     bits4-2 HRES = 111 → 160 bytes per row
-;     bits1-0 CRES = 10  → 16 colors (4bpp, 2 pixels per byte)
+;     bits6-5 LPF = 00  -> 192 scan lines
+;     bits4-2 HRES = 111 -> 160 bytes per row
+;     bits1-0 CRES = 10  -> 16 colors (4bpp, 2 pixels per byte)
 ;
 ;   VRES ($FF99) = $7E  (for 225 lines)
-;     bits6-5 LPF = 11  → 225 scan lines
-;     Note: 160 × 225 = 36,000 bytes.  VID_BASE must be ≤ $7000 for this to
-;     fit in a single 64K address window ($7000 + $8CA0 = $FCA0 ≤ $FFFF).
+;     bits6-5 LPF = 11  -> 225 scan lines
+;     Note: 160 x 225 = 36,000 bytes.  VID_BASE must be ? $7000 for this to
+;     fit in a single 64K address window ($7000 + $8CA0 = $FCA0 ? $FFFF).
 ;     Adjust VOFF_H/L and MMU slot mapping accordingly.
 ;
-;   INIT0 ($FF90) — CRITICAL:
-;     bit7 COCO = 0  — MUST be 0 for CoCo3 graphics.  Setting COCO=1 locks
+;   INIT0 ($FF90) -- CRITICAL:
+;     bit7 COCO = 0  -- MUST be 0 for CoCo3 graphics.  Setting COCO=1 locks
 ;     the chip into CoCo 1/2 compatibility mode and disables all CoCo3 modes.
 ;     RSDOS sets INIT0=$44 for CoCo3 graphics, $C4 for CoCo1/2 modes.
 ;
 ; WHY VID_BASE = $8000 (not $A000):
-;   160 bytes/row × 192 rows = 30,720 bytes.
-;   $A000 + 30,720 = $117FF — overflows 16-bit CPU address space.
-;   $8000 + 30,720 = $F7FF — fits within 64K. ✓
+;   160 bytes/row x 192 rows = 30,720 bytes.
+;   $A000 + 30,720 = $117FF -- overflows 16-bit CPU address space.
+;   $8000 + 30,720 = $F7FF -- fits within 64K. OK
 ;   Video occupies $8000-$F7FF, leaving $F800-$FDFF for stack/misc.
 ;
 ; PALETTE FORMAT:
@@ -1432,8 +1436,8 @@ SPR_ENEMY0_WALK2
 ;
 ; DOUBLE BUFFERING (eliminates flicker):
 ;   Allocate two 30,720-byte video pages:
-;     Page A at CPU $8000  →  VOFF = $E000  (MMU slots 4-7 → pages $38-$3B)
-;     Page B at CPU $8000  →  VOFF = $E800  (MMU slots 4-7 → pages $3C-$3F)
+;     Page A at CPU $8000  ->  VOFF = $E000  (MMU slots 4-7 -> pages $38-$3B)
+;     Page B at CPU $8000  ->  VOFF = $E800  (MMU slots 4-7 -> pages $3C-$3F)
 ;   Draw to the page currently NOT displayed, then swap GIME_VOFF_H at VSync.
 ;   With only 128K of RAM this is tight; a 512K upgrade (standard on CoCo3)
 ;   gives plenty of room.
@@ -1443,7 +1447,7 @@ SPR_ENEMY0_WALK2
 ;     if PLR_VY > 0                                (falling)
 ;     && PLR_Y+SPR_H >= PLAT_Y                    (feet at or below platform top)
 ;     && PLR_Y+SPR_H <= PLAT_Y + 4 + VY_MAX      (didn't tunnel through)
-;     && PLR_X + SPR_W > PLAT_X1*2               (horizontal overlap — *2 for pixel coords)
+;     && PLR_X + SPR_W > PLAT_X1*2               (horizontal overlap -- *2 for pixel coords)
 ;     && PLR_X < PLAT_X2*2:
 ;         PLR_Y = PLAT_Y - SPR_H
 ;         PLR_VY = 0
